@@ -123,13 +123,14 @@ function LeftSection() {
 
 // Component to load and render the GLB model
 function ModelViewer() {
-    const { scene } = useGLTF("/2CylinderEngine.glb"); // Ensure this path matches your FastAPI route
+    // const { scene } = useGLTF("/2CylinderEngine.glb"); // Ensure this path matches your FastAPI route
+
     return (
         <div className="h-[calc(100vh-150px)] my-7 rounded-xl overflow-hidden">
             <Canvas camera={{ position: [2, 2, 2] }}>
                 <ambientLight />
                 <directionalLight position={[5, 5, 5]} />
-                <primitive object={scene} scale={0.5} />
+                {/* <primitive object={scene} scale={0.5} /> */}
                 <OrbitControls enableZoom={true} />
             </Canvas>
         </div>
