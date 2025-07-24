@@ -1,70 +1,81 @@
-import React from "react";
+import React from 'react';
+import { useState } from 'react';
 import {
-    Textarea,
+    Menu,
+    MenuHandler,
+    MenuList,
+    MenuItem,
     Typography,
     Button,
+    Textarea,
+    Spinner,
     Tabs,
     TabsHeader,
     TabsBody,
     Tab,
     TabPanel,
-    Menu,
-    MenuHandler,
-    MenuList,
-    MenuItem,
-    Spinner,
-} from "@material-tailwind/react";
+} from '@material-tailwind/react';
 import {
+    VariableIcon,
+    ChevronDownIcon,
     CubeTransparentIcon,
     BeakerIcon,
     ArrowDownOnSquareStackIcon,
-    ChevronDownIcon,
-    VariableIcon,
-} from "@heroicons/react/24/solid";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+    PaperAirplaneIcon,
+    LanguageIcon,
+} from '@heroicons/react/24/solid';
 
-function ModelDropdown() {
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF } from '@react-three/drei';
+import Skeleton from '../components/skeleton';
+import ExportDialog from '../components/Export';
+
+function ModelDropdown({ selectedModel, onChange }) {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const [selectedModel, setSelectedModel] = React.useState("Model");
-
     const models = ["TIG", "PatchTST"];
 
     const handleSelect = (model) => {
-        setSelectedModel(model);
+        onChange?.(model); // Optional callback to parent
         setIsMenuOpen(false);
     };
 
     return (
-        <div className="flex justify-center items-center py-4">
-            <Menu open={isMenuOpen} handler={setIsMenuOpen} allowHover>
-                <MenuHandler>
-                    <Typography as="div" variant="small" className="font-normal cursor-pointer">
-                        <MenuItem className="flex items-center gap-2 font-medium text-blue-gray-900 rounded-full">
-                            <VariableIcon className="h-5 w-5 text-blue-gray-500" />
-                            {selectedModel}
-                            <ChevronDownIcon
-                                strokeWidth={2}
-                                className={`h-3 w-3 transition-transform ${isMenuOpen ? "rotate-180" : ""}`}
-                            />
-                        </MenuItem>
+        <Menu open={isMenuOpen} handler={setIsMenuOpen} allowHover>
+            <MenuHandler>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer border border-gray-300 hover:bg-gray-100 transition">
+                    <VariableIcon className="h-5 w-5 text-blue-gray-500" />
+                    <Typography variant="small" className="font-medium text-blue-gray-900">
+                        {selectedModel || "Model"}
                     </Typography>
-                </MenuHandler>
-                <MenuList className="w-48">
-                    {models.map((model) => (
-                        <MenuItem key={model} onClick={() => handleSelect(model)}>
-                            {model}
-                        </MenuItem>
-                    ))}
-                </MenuList>
-            </Menu>
-        </div>
+                    <ChevronDownIcon
+                        strokeWidth={2}
+                        className={`h-4 w-4 transition-transform ${isMenuOpen ? "rotate-180" : ""}`}
+                    />
+                </div>
+            </MenuHandler>
+
+            <MenuList className="w-44">
+                {models.map((model) => (
+                    <MenuItem
+                        key={model}
+                        onClick={() => handleSelect(model)}
+                        className="hover:bg-blue-50"
+                    >
+                        {model}
+                    </MenuItem>
+                ))}
+            </MenuList>
+        </Menu>
     );
 }
 
+
 function LeftSection() {
-    const [file, setFile] = React.useState(null);
-    const [text, setText] = React.useState("");
+    const [file, setFile] = useState(null);
+    const [text, setText] = useState("");
+    const [selectedModel, setSelectedModel] = useState("Select Model");
+    const [previewImageUrl, setPreviewImageUrl] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleDrop = (e) => {
         e.preventDefault();
@@ -83,174 +94,326 @@ function LeftSection() {
         console.log("Sending to backend:", text);
     };
 
+    const handleFileUpload = async () => {
+        if (!file) return;
+        setIsUploading(true);
+        setPreviewImageUrl(null);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            setPreviewImageUrl(url);
+        } catch (err) {
+            console.error("Upload failed:", err);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     return (
-        <div className="flex flex-col h-full pl-10 pr-4 py-6 gap-4">
-            <ModelDropdown />
-            <div
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => document.getElementById("file-input").click()}
-                className="aspect-video border-2 border-dashed border-purple-500 rounded-lg flex items-center justify-center text-center cursor-pointer"
-            >
-                <input
-                    id="file-input"
-                    type="file"
-                    className="hidden"
-                    accept=".csv,image/*"
-                    onChange={handleFileChange}
-                />
-                <Typography variant="h6" className="text-cyan-800">
-                    {file ? file.name : "Drag & Drop or Click to Upload a CSV/Image"}
-                </Typography>
+        <div className="flex flex-col h-full w-full">
+            {/* Scrollable main content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Model selector */}
+                <div className="flex justify-center">
+                    <ModelDropdown
+                        selectedModel={selectedModel}
+                        onChange={(model) => setSelectedModel(model)}
+                    />
+                </div>
+
+                {/* Upload + Preview */}
+                <div className="w-full aspect-video relative">
+                    {/* Drop/Click Upload Box */}
+                    <div
+                        onDrop={handleDrop}
+                        onDragOver={(e) => e.preventDefault()}
+                        onClick={() => document.getElementById("file-input").click()}
+                        className="absolute inset-0 border-2 border-dashed border-purple-500 rounded-lg flex items-center justify-center text-center cursor-pointer transition hover:bg-purple-50 z-10"
+                    >
+                        <input
+                            id="file-input"
+                            type="file"
+                            className="hidden"
+                            accept=".csv,image/*"
+                            onChange={handleFileChange}
+                        />
+                        <Typography variant="h6" className="text-cyan-800 z-20">
+                            {file ? file.name : "Drag & Drop or Click to Upload a CSV/Image"}
+                        </Typography>
+                    </div>
+
+                    {/* Backend-generated preview image (if exists) */}
+                    {previewImageUrl && (
+                        <img
+                            src={previewImageUrl}
+                            alt="Processed Preview"
+                            className="absolute inset-0 object-contain w-full h-full rounded-lg pointer-events-none z-0"
+                        />
+                    )}
+                </div>
+
+                {/* Upload Button */}
+                <div className="flex justify-center">
+                    <Button
+                        disabled={!file || isUploading}
+                        onClick={handleFileUpload}
+                        className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700"
+                    >
+                        {isUploading ? "Uploading..." : "Upload File"}
+                    </Button>
+                </div>
             </div>
 
-            <div className="flex-grow" />
-
-            <div className="flex flex-col gap-2">
+            {/* Fixed Chat Input */}
+            <div className="border-t border-gray-200 p-4 space-y-2">
                 <Textarea
-                    color="green"
-                    label="LLM Support"
+                    label="Prompt the LLM..."
                     value={text}
+                    color="green"
                     onChange={(e) => setText(e.target.value)}
+                    containerProps={{ className: "min-h-[100px]" }}
                 />
-                <Button color="green" onClick={handleSend}>
-                    Generate
+
+                <div className="flex justify-end">
+                    <Button
+                        onClick={handleSend}
+                        className="text-white px-4 py-2 rounded-md transition"
+                    >
+                        <PaperAirplaneIcon className="h-5 w-5" />
+                    </Button>
+                </div>
+            </div>
+
+
+
+        </div>
+    );
+}
+
+
+function ModelViewer({ onExport }) {
+    return (
+        <div className="flex flex-col h-full w-full">
+            <div className="flex-1 min-h-0 w-full rounded-xl overflow-hidden border border-gray-200">
+                <Canvas camera={{ position: [2, 2, 2], fov: 50 }}>
+                    <ambientLight intensity={0.5} />
+                    <directionalLight position={[5, 3, 4]} intensity={1} />
+                    <mesh>
+                        <boxGeometry args={[1, 1, 1]} />
+                        <meshStandardMaterial color="skyblue" />
+                    </mesh>
+                    <OrbitControls enableZoom={true} />
+                </Canvas>
+            </div>
+            <div className="mt-auto p-4 flex justify-center">
+                <Button
+                    onClick={onExport}
+                    className="bg-pink-400 text-white px-4 py-2 rounded-md hover:bg-pink-600 flex items-center gap-2"
+                >
+                    <ArrowDownOnSquareStackIcon className="w-5 h-5" />
+                    Export
                 </Button>
             </div>
         </div>
     );
 }
 
-// Component to load and render the GLB model
-function ModelViewer() {
-    const { scene } = useGLTF("/2CylinderEngine.glb"); // Ensure this path matches your FastAPI route
-    return (
-        <div className="h-[calc(100vh-150px)] my-7 rounded-xl overflow-hidden">
-            <Canvas camera={{ position: [2, 2, 2] }}>
-                <ambientLight />
-                <directionalLight position={[5, 5, 5]} />
-                <primitive object={scene} scale={0.5} />
-                <OrbitControls enableZoom={true} />
-            </Canvas>
-        </div>
-    );
-}
 
-function ValidateSection() {
+function ValidateSection({ onExport }) {
     const [isLoading, setIsLoading] = React.useState(false);
     const [imageUrl, setImageUrl] = React.useState(null);
+    const [logs, setLogs] = React.useState([]);
 
     const handleSimulate = async () => {
         setIsLoading(true);
         setImageUrl(null);
+        setLogs([]);
 
         try {
-            const res = await fetch("/api/simulate"); // Your backend route
+            const res = await fetch("/api/simulate");
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
             setImageUrl(url);
+
+            const logsRes = await fetch("/api/simulate/logs");
+            const data = await logsRes.json();
+            setLogs(data.logs || []);
         } catch (err) {
             console.error("Simulation failed:", err);
+            setLogs(["Simulation failed. Check console for details."]);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="flex flex-col items-center gap-6 mt-6">
-            <button
-                onClick={handleSimulate}
-                className="bg-teal-300 text-white font-semibold px-6 py-2 rounded-md hover:bg-green-700 transition"
-            >
-                Simulate
-            </button>
+        <div className="flex flex-col h-full w-full px-2 py-4 gap-4">
+            <div className="flex justify-center">
+                <Button
+                    onClick={handleSimulate}
+                    className="bg-teal-500 text-white px-6 py-2 rounded-md hover:bg-teal-600"
+                >
+                    Simulate
+                </Button>
+            </div>
 
-            <div className="w-full max-w-md h-[300px] flex items-center justify-center rounded-lg border-transparent">
+            <div className="w-full max-w-4xl mx-auto aspect-video rounded-lg border border-gray-200 flex items-center justify-center">
                 {isLoading ? (
-                    <Spinner className="h-24 w-24" color="orange" />
+                    <Spinner className="h-16 w-16" color="orange" />
+                ) : imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt="Simulation Output"
+                        className="object-contain w-full h-full rounded-md"
+                    />
                 ) : (
-                    imageUrl && (
-                        <img
-                            src={imageUrl}
-                            alt="Simulation Output"
-                            className="object-contain w-full h-full rounded-md"
-                        />
-                    )
+                    <Typography variant="small" color="gray">
+                        Simulated response will appear here
+                    </Typography>
                 )}
+            </div>
+
+            <div className="flex-1 min-h-0 w-full max-w-4xl mx-auto border border-gray-200 rounded-md overflow-y-auto p-4 bg-gray-50">
+                {logs.length > 0 ? (
+                    logs.map((line, idx) => (
+                        <Typography key={idx} variant="small" className="text-gray-800 whitespace-pre-wrap">
+                            {line}
+                        </Typography>
+                    ))
+                ) : (
+                    <Typography variant="small" color="gray">
+                        Simulation logs will appear here
+                    </Typography>
+                )}
+            </div>
+
+            <div className="mt-auto p-4 flex justify-center">
+                <Button
+                    onClick={onExport}
+                    className="bg-pink-400 text-white px-4 py-2 rounded-md hover:bg-pink-600 flex items-center gap-2"
+                >
+                    <ArrowDownOnSquareStackIcon className="w-5 h-5" />
+                    Export
+                </Button>
             </div>
         </div>
     );
 }
 
 
-export function RightSection() {
+function LLMChatSection() {
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [responseText, setResponseText] = React.useState(null);
 
+    const handleSend = async () => {
+        setIsLoading(true);
+        setResponseText(null);
 
+        try {
+            const res = await fetch("/api/llm-chat");
+            const data = await res.text(); // or .json() depending on backend
+            setResponseText(data);
+        } catch (err) {
+            console.error("Failed to fetch LLM response:", err);
+            setResponseText("Error: Failed to get response from backend.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    const data = [
+    return (
+        <div className="flex flex-col h-full w-full overflow-hidden">
+            <div className="flex-1 min-h-0 w-full rounded-md overflow-y-auto p-6">
+                {isLoading ? (
+                    <div className="flex justify-center">
+                        <Skeleton />
+                    </div>
+                ) : responseText ? (
+                    <Typography variant="paragraph" className="whitespace-pre-wrap text-gray-800">
+                        {responseText}
+                    </Typography>
+                ) : (
+                    <Typography variant="small" color="gray">
+                        LLM output will appear here
+                    </Typography>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function RightSection() {
+    const [exportOpen, setExportOpen] = useState(false);
+    const tabsData = [
         {
             label: "Output",
             value: "output",
             icon: CubeTransparentIcon,
-            desc: (
-                <ModelViewer />
-            ),
+            desc: <ModelViewer onExport={() => setExportOpen(true)} />,
         },
         {
             label: "Validate",
             value: "validate",
             icon: BeakerIcon,
-            desc: (
-                <ValidateSection />
-            ),
+            desc: <ValidateSection onExport={() => setExportOpen(true)} />,
         },
         {
-            label: "Export",
-            value: "export",
-            icon: ArrowDownOnSquareStackIcon,
-            desc: `We're not always in the position that we want to be at.
-        We're constantly growing. We're constantly making mistakes. We're
-        constantly trying to express ourselves and actualize our dreams.`,
+            label: "LLM Chat",
+            value: "llm-chat",
+            icon: LanguageIcon,
+            desc: <LLMChatSection />, // optional: also allow export from here
         },
     ];
 
     return (
-        <div className="h-full px-8 py-6 overflow-y-auto">
-            <Tabs value="output">
-                <TabsHeader>
-                    {data.map(({ label, value, icon }) => (
-                        <Tab key={value} value={value}>
-                            <div className="flex items-center gap-2">
-                                {React.createElement(icon, { className: "w-5 h-5" })}
-                                {label}
-                            </div>
-                        </Tab>
-                    ))}
-                </TabsHeader>
-                <TabsBody>
-                    {data.map(({ value, desc }) => (
-                        <TabPanel key={value} value={value}>
-                            {desc}
-                        </TabPanel>
-                    ))}
-                </TabsBody>
-            </Tabs>
-        </div>
+        <>
+            <div className="flex flex-col h-full w-full overflow-hidden">
+                <Tabs value="output" className="flex flex-col h-full">
+                    <TabsHeader className="bg-gray-100">
+                        {tabsData.map(({ label, value, icon }) => (
+                            <Tab key={value} value={value}>
+                                <div className="flex items-center gap-2">
+                                    {icon && React.createElement(icon, { className: "w-5 h-5" })}
+                                    {label}
+                                </div>
+                            </Tab>
+                        ))}
+                    </TabsHeader>
+
+                    <TabsBody className="flex-1 min-h-0 overflow-hidden px-4 py-4">
+                        {tabsData.map(({ value, desc }) => (
+                            <TabPanel key={value} value={value} className="flex flex-col h-full">
+                                {desc}
+                            </TabPanel>
+                        ))}
+                    </TabsBody>
+                </Tabs>
+            </div>
+
+            {/* Export Dialog */}
+            <ExportDialog open={exportOpen} setOpen={setExportOpen} />
+        </>
     );
 }
 
-export default function Rng() {
+export default function Metamizer() {
     return (
-        <div className="flex flex-col h-screen overflow-hidden">
-            {/* Main horizontal layout */}
-            <div className="flex flex-grow overflow-hidden">
-                {/* Left: 60% */}
-                <div className="w-3/5 pr-2 h-full">
+        <div className="fixed top-[64px] left-0 right-0 bottom-0 overflow-hidden">
+            <div className="flex w-full h-full">
+                {/* Left Section - 60% */}
+                <div className="w-[60%] h-full overflow-y-auto bg-white p-6">
                     <LeftSection />
                 </div>
 
-                {/* Right: 40% */}
-                <div className="w-2/5 h-full">
+                {/* Right Section - 40% */}
+                <div className="w-[40%] h-full overflow-y-auto p-6">
                     <RightSection />
                 </div>
             </div>

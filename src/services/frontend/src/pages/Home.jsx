@@ -1,59 +1,61 @@
 import React from "react";
-import { Card, Input, Button, Typography } from "@material-tailwind/react";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Typography,
+  Button,
+} from "@material-tailwind/react";
+import { services } from "../config"; // Adjust path if needed
 
 export default function Home() {
-  const handleLogin = (e) => {
-    e.preventDefault();
-    // TODO: Trigger Google OAuth or backend call here
-    console.log("Login clicked");
-  };
+  const userType = localStorage.getItem("userType");
+
+  const visibleServices = services.filter(({ auth }) => {
+    if (auth === "all") return true;
+    if (auth === "internal" && (userType === "admin" || userType === "internal")) return true;
+    return false;
+  });
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-300">
-      <Card className="w-full max-w-sm p-6 shadow-lg bg-white">
-        <Typography variant="h4" className="text-center font-semibold mb-6">
-          Sign in to Metamizer
-        </Typography>
-
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <Input
-            variant="outlined"
-            size="lg"
-            label="Email"
-            type="email"
-            required
-            className="focus:outline-none"
-          />
-          <Input
-            variant="outlined"
-            size="lg"
-            label="Password"
-            type="password"
-            required
-            className="focus:outline-none"
-          />
-          <Button type="submit" color="blue" size="lg" className="mt-2">
-            Login
-          </Button>
-        </form>
-
-        <div className="my-4 text-center text-sm text-gray-500">or</div>
-
-        <Button
-          color="white"
-          className="w-full border border-gray-300 text-black shadow-sm flex items-center justify-center gap-2"
-          onClick={() => {
-            window.location.href = "http://localhost:8000/login/google"; // change for prod
-          }}
+    <div className="fixed top-[64px] left-0 right-0 bottom-0 overflow-hidden">
+      <div className="w-full h-full overflow-y-auto p-6 flex justify-center items-start">
+        <div
+          className={`grid gap-8 sm:grid-cols-2 ${visibleServices.length === 1
+              ? "lg:grid-cols-1"
+              : visibleServices.length === 2
+                ? "lg:grid-cols-2"
+                : visibleServices.length === 3
+                  ? "lg:grid-cols-3"
+                  : "lg:grid-cols-4"
+            }`}
         >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="Google"
-            className="h-5 w-5"
-          />
-          Continue with Google
-        </Button>
-      </Card>
+
+          {visibleServices.map(({ title, description, link, logo }) => (
+            <Card key={title} className="w-80">
+              <CardHeader className="relative h-40 bg-transparent shadow-none">
+                <img
+                  src={logo}
+                  alt={title}
+                  className="object-contain h-full w-full p-4"
+                />
+              </CardHeader>
+              <CardBody>
+                <Typography variant="h5" color="blue-gray" className="mb-2">
+                  {title}
+                </Typography>
+                <Typography className="text-sm">{description}</Typography>
+              </CardBody>
+              <CardFooter className="pt-0">
+                <a href={link}>
+                  <Button fullWidth>Go</Button>
+                </a>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

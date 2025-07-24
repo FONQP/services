@@ -32,9 +32,8 @@ const handleLogin = async () => {
 };
 
 
-export default function Login() {
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen((cur) => !cur);
+export default function ExportDialog({ open, setOpen }) {
+  const handleClose = () => setOpen(false);
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -45,18 +44,7 @@ export default function Login() {
 
   return (
     <>
-      <Button
-        onClick={handleOpen}
-        className="bg-lime-700 text-white px-6 py-2 rounded-md hover:bg-lime-800"
-      >
-        Log In
-      </Button>
-      <Dialog
-        size="xs"
-        open={open}
-        handler={handleOpen}
-        className="bg-transparent shadow-none"
-      >
+      <Dialog open={open} handler={handleClose} size="xs" className="bg-transparent shadow-none">
         <Card className="mx-auto w-full max-w-[24rem]">
           <CardBody className="flex flex-col gap-4">
             <Typography variant="h4" color="blue-gray">

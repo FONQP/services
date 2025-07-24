@@ -13,20 +13,17 @@ import {
   IconButton,
 } from "@material-tailwind/react";
 import {
-  CubeTransparentIcon,
   UserCircleIcon,
-  CodeBracketSquareIcon,
   Square3Stack3DIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
-  InboxArrowDownIcon,
   LifebuoyIcon,
   PowerIcon,
-  RocketLaunchIcon,
   Bars2Icon,
 } from "@heroicons/react/24/solid";
 import Login from "./Login";
 import { useLocation } from "react-router-dom";
+import { services } from "../config";
 
 // profile menu component
 const profileMenuItems = [
@@ -116,117 +113,87 @@ function ProfileMenu() {
 }
 
 // nav list menu
-const navListMenuItems = [
-  {
-    title: "Latex Server",
-    description:
-      "Internal Latex Server",
-    auth: "internal",
-    // link to current page/latex
-    link: "/services/latex",
-  },
-  {
-    title: "MetaMizer",
-    description:
-      "Design Metamaterials",
-    auth: "all",
-    link: "/services/metamizer",
-  },
-  {
-    title: "Datasets",
-    description:
-      "Optical Datasets",
-    auth: "all",
-    link: "/services/datasets",
-  },
-  {
-    title: "Random Number Generator",
-    description:
-      "Access TRNGs",
-    auth: "all",
-    link: "/services/rng",
-  },
-];
+const navListMenuItems = services;
 
 function NavListMenu() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const userType = localStorage.getItem("userType");
+
   const renderItems = navListMenuItems
     .filter(({ auth }) => {
       if (auth === "all") return true;
       if (auth === "internal" && (userType === "admin" || userType === "internal")) return true;
       return false;
     })
-    .map(({ title, description, link }) => (
+    .map(({ title, logo, link }) => (
       <a href={link} key={title}>
-        <MenuItem>
-          <Typography variant="h6" color="blue-gray" className="mb-1">
-            {title}
-          </Typography>
-          <Typography variant="small" color="gray" className="font-normal">
-            {description}
-          </Typography>
+        <MenuItem className="p-1 flex justify-start bg-transparent hover:bg-transparent shadow-none border-none">
+          <img
+            src={logo}
+            alt={title}
+            className="h-6 w-auto object-contain bg-transparent"
+            style={{ backgroundColor: "transparent" }}
+          />
         </MenuItem>
       </a>
     ));
 
   return (
-    <React.Fragment>
+    <>
       <Menu allowHover open={isMenuOpen} handler={setIsMenuOpen}>
         <MenuHandler>
           <Typography as="a" href="#" variant="small" className="font-normal">
             <MenuItem className="hidden items-center gap-2 font-medium text-blue-gray-900 lg:flex lg:rounded-full">
-              <Square3Stack3DIcon className="h-[18px] w-[18px] text-blue-gray-500" />{" "}
-              Services{" "}
+              <Square3Stack3DIcon className="h-[18px] w-[18px] text-blue-gray-500" />
+              Services
               <ChevronDownIcon
                 strokeWidth={2}
-                className={`h-3 w-3 transition-transform ${isMenuOpen ? "rotate-180" : ""
-                  }`}
+                className={`h-3 w-3 transition-transform ${isMenuOpen ? "rotate-180" : ""}`}
               />
             </MenuItem>
           </Typography>
         </MenuHandler>
-        <MenuList className="hidden w-[36rem] grid-cols-7 gap-3 overflow-visible lg:grid">
-          <Card
-            color="blue"
-            shadow={false}
-            variant="gradient"
-            className="col-span-3 grid h-full w-full place-items-center rounded-md"
-          >
-            <RocketLaunchIcon strokeWidth={1} className="h-28 w-28" />
-          </Card>
-          <ul className="col-span-4 flex w-full flex-col gap-1">
-            {renderItems}
-          </ul>
+
+        <MenuList className="hidden flex-col gap-1 p-2 lg:flex w-48">
+          {renderItems}
         </MenuList>
       </Menu>
+
+      {/* Mobile version fallback */}
       <MenuItem className="flex items-center gap-2 font-medium text-blue-gray-900 lg:hidden">
-        <Square3Stack3DIcon className="h-[18px] w-[18px] text-blue-gray-500" />{" "}
-        Services{" "}
+        <Square3Stack3DIcon className="h-[18px] w-[18px] text-blue-gray-500" />
+        Services
       </MenuItem>
       <ul className="ml-6 flex w-full flex-col gap-1 lg:hidden">
-        {renderItems}
+        {navListMenuItems
+          .filter(({ auth }) => auth === "all" || (auth === "internal" && (userType === "admin" || userType === "internal")))
+          .map(({ title, link }) => (
+            <a href={link} key={title}>
+              <MenuItem>{title}</MenuItem>
+            </a>
+          ))}
       </ul>
-    </React.Fragment>
+    </>
   );
 }
 
+
 // nav list component
-const navListItems = [
-  {
-    label: "Account",
-    icon: UserCircleIcon,
-  },
-  {
-    label: "Blocks",
-    icon: CubeTransparentIcon,
-  },
-  {
-    label: "Docs",
-    icon: CodeBracketSquareIcon,
-  },
-];
+// const navListItems = [
+//   {
+//     label: "Account",
+//     icon: UserCircleIcon,
+//   },
+//   {
+//     label: "Blocks",
+//     icon: CubeTransparentIcon,
+//   },
+//   {
+//     label: "Docs",
+//     icon: CodeBracketSquareIcon,
+//   },
+// ];
 
 function NavList() {
   return (
@@ -264,14 +231,18 @@ export default function ComplexNavbar() {
   }, []);
 
   const location = useLocation();
-  const isMetamizer = location.pathname === "/services/metamizer";
-  const isRng = location.pathname === "/services/rng";
+  const isHome = location.pathname === "/";
 
   return (
-    <Navbar className="w-screen max-w-none p-2 lg:rounded-none lg:px-6">
+    <Navbar
+      fullWidth
+      className="fixed top-0 left-0 z-50 p-2 lg:rounded-none lg:pl-6 bg-white shadow"
+    >
 
-      <div className="relative mx-auto flex items-centerjustify-between text-blue-gray-900">
-        <a href="/" className="mr-4 ml-2 cursor-pointer py-1.5">
+
+      <div className="relative flex w-full items-center justify-between text-blue-gray-900">
+        {/* Left: Logo */}
+        <a href="/" className="ml-2 flex-shrink-0">
           <img
             src="/logo-crp.png"
             alt="FONQP Logo"
@@ -279,47 +250,59 @@ export default function ComplexNavbar() {
           />
         </a>
 
-        <div className="hidden lg:block">
-          <NavList />
-        </div>
-        <IconButton
-          size="sm"
-          color="blue-gray"
-          variant="text"
-          onClick={toggleIsNavOpen}
-          className="ml-auto mr-2 lg:hidden"
-        >
-          <Bars2Icon className="h-6 w-6" />
-        </IconButton>
+        <div className="flex items-center gap-6 ml-auto pr-4">
+          {/* Mobile hamburger (hidden on lg) */}
+          <IconButton
+            size="sm"
+            color="blue-gray"
+            variant="text"
+            onClick={toggleIsNavOpen}
+            className="lg:hidden"
+          >
+            <Bars2Icon className="h-6 w-6" />
+          </IconButton>
 
-        {isMetamizer && (
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <img
-              src="/MetaMizer-logo.png"
-              alt="MetaMizer Logo"
-              className="h-12"
-            />
-          </div>
-        )}
+          {/* Desktop NavList (hidden on small) */}
+          {!isHome &&
+            <div className="hidden lg:block">
+              <NavList />
+            </div>
+          }
 
-        {isRng && (
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <img
-              src="/rng-logo.png"
-              alt="RNG Logo"
-              className="h-12"
-            />
-          </div>
-        )}
+          {isHome && (
+            <div className="absolute left-1/2 -translate-x-1/2 hidden sm:block">
+              <Typography
+                variant="h4"
+                className="text-cyan-800 font-bold"
+              >
+                Services
+              </Typography>
+            </div>
+          )}
 
-        <div className="ml-auto">
+          {!isHome && (
+            <div className="absolute left-1/2 -translate-x-1/2 hidden sm:block">
+              <img
+                src={
+                  services.find(s => s.link === location.pathname)?.logo ||
+                  "/default-logo.png" // Fallback logo if not found
+                }
+                alt="Page Logo"
+                className="h-12"
+              />
+            </div>
+          )}
+
           <ProfileMenu />
+
         </div>
 
       </div>
-      <MobileNav open={isNavOpen} className="overflow-scroll">
-        <NavList />
-      </MobileNav>
+      {isNavOpen && (
+        <MobileNav open={isNavOpen} className="lg:hidden overflow-scroll">
+          <NavList />
+        </MobileNav>
+      )}
     </Navbar>
   );
 }
