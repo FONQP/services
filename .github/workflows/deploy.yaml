@@ -21,19 +21,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: chg dir
-        run: cd ./src/services/frontend
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./src/services/frontend
 
       - name: Build React app
         run: CI=false npm run build
+        working-directory: ./src/services/frontend
 
       - name: Upload build output
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist  # React's default build output
+          path: ./src/services/frontend/dist
 
   deploy:
     needs: build
