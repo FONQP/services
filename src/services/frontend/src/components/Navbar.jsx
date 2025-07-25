@@ -23,7 +23,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Login from "./Login";
 import { useLocation } from "react-router-dom";
-import { services } from "../config";
+import { services, base } from "../config";
 
 // profile menu component
 const profileMenuItems = [
@@ -244,7 +244,7 @@ export default function ComplexNavbar() {
         {/* Left: Logo */}
         <a href="/" className="ml-2 flex-shrink-0">
           <img
-            src="/logo-crp.png"
+            src={`${base}/logo-crp.png`}
             alt="FONQP Logo"
             className="h-7 w-auto"
           />
@@ -284,13 +284,16 @@ export default function ComplexNavbar() {
             <div className="absolute left-1/2 -translate-x-1/2 hidden sm:block">
               <img
                 src={
-                  services.find(s => s.link === location.pathname)?.logo ||
-                  "/default-logo.png" // Fallback logo if not found
+                  services.find(
+                    (s) =>
+                      s.link.replace(base, "/") === location.pathname
+                  )?.logo
                 }
                 alt="Page Logo"
                 className="h-12"
               />
             </div>
+
           )}
 
           <ProfileMenu />

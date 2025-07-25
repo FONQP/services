@@ -1,6 +1,6 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-const base = import.meta.env.BASE_URL;
+export const base = import.meta.env.BASE_URL;
 
 export const services = [
   {

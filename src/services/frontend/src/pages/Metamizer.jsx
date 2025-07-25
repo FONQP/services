@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     Menu,
     MenuHandler,
@@ -30,6 +31,7 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 import Skeleton from '../components/skeleton';
 import ExportDialog from '../components/Export';
 import NotLoggedInMessage from '../components/NotLoggedInMessage';
+import { services, base } from '../config';
 
 function ModelDropdown({ selectedModel, onChange }) {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -423,12 +425,15 @@ function RightSection() {
 export default function Metamizer() {
     const isLoggedIn = localStorage.getItem("authToken") !== null;
 
+    const location = useLocation();
+    const bkg = services.find(s => s.link.replace(base, "/") === location.pathname);
+
     return (
         <div className="fixed top-[64px] left-0 right-0 bottom-0 overflow-hidden">
             <div
                 className="absolute inset-0 bg-no-repeat bg-cover z-0"
                 style={{
-                    backgroundImage: "url('/MetaMizer-bkg.png')",
+                    backgroundImage: `url(${bkg?.bkg})`,
                     backgroundSize: "cover", // zoomed out
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
@@ -448,6 +453,7 @@ export default function Metamizer() {
                 <div className="w-[40%] h-full overflow-y-auto bg-white bg-opacity-90 p-6">
                     <RightSection />
                 </div>
+
             </div>
         </div>
     );
