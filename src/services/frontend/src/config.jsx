@@ -1,5 +1,7 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
+const base = import.meta.env.BASE_URL;
+
 export const services = [
   {
     title: "Latex Server",
@@ -7,35 +9,35 @@ export const services = [
       "Internal Latex Server",
     auth: "internal",
     // link to current page/latex
-    link: "/services/latex",
-    logo: "/latex-logo.png",
-    bkg: "MetaMizer-bkg.png",
+    link: `${base}latex`,
+    logo: `${base}latex-logo.png`,
+    bkg: `${base}latex-bkg.png`,
   },
   {
     title: "MetaMizer",
     description:
       "Design Metamaterials",
     auth: "all",
-    link: "/services/metamizer",
-    logo: "/MetaMizer-logo.png",
-    bkg: "MetaMizer-bkg.png",
+    link: `${base}metamizer`,
+    logo: `${base}MetaMizer-logo.png`,
+    bkg: `${base}MetaMizer-bkg.png`,
   },
   {
     title: "Datasets",
     description:
       "Optical Datasets",
     auth: "all",
-    link: "/services/datasets",
-    logo: "/datasets-logo.png",
-    bkg: "MetaMizer-bkg.png",
+    link: `${base}datasets`,
+    logo: `${base}datasets-logo.png`,
+    bkg: `${base}MetaMizer-bkg.png`,
   },
   {
     title: "Random Number Generator",
     description:
       "Access TRNGs",
     auth: "all",
-    link: "/services/rng",
-    logo: "/rng-logo.png",
-    bkg: "MetaMizer-bkg.png",
+    link: `${base}rng`,
+    logo: `${base}rng-logo.png`,
+    bkg: `${base}MetaMizer-bkg.png`,
   },
 ];

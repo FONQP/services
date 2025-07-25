@@ -7,7 +7,8 @@ import {
   Typography,
   Button,
 } from "@material-tailwind/react";
-import { services } from "../config"; // Adjust path if needed
+import { services } from "../config";
+import Footer from "../components/Footer";
 
 export default function Home() {
   const userType = localStorage.getItem("userType");
@@ -56,6 +57,7 @@ export default function Home() {
           ))}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

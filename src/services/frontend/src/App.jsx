@@ -6,16 +6,15 @@ import Footer from "./components/Footer";
 import Rng from "./pages/Rng";
 
 function App() {
-
   return (
-    <Router>
+    <Router basename="/services">
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <div className="pt-[64px]">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/services/metamizer" element={<Metamizer />} />
-            <Route path="/services/rng" element={<Rng />} />
+            <Route path="/metamizer" element={<Metamizer />} />
+            <Route path="/rng" element={<Rng />} />
           </Routes>
         </div>
         {/* <Footer /> */}
