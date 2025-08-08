@@ -9,7 +9,7 @@ import {
   Input,
 } from "@material-tailwind/react";
 
-import { API_BASE_URL } from "../config";
+import { API_BASE_URL } from "../data/Services";
 import Signup from "./Signup"; // Assuming you have a SignupDialog component
 
 const handleLogin = async () => {

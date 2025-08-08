@@ -23,7 +23,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Login from "./Login";
 import { useLocation } from "react-router-dom";
-import { services, base } from "../config";
+import { services } from "../data/Services";
 
 // profile menu component
 const profileMenuItems = [
@@ -143,8 +143,8 @@ function NavListMenu() {
     <>
       <Menu allowHover open={isMenuOpen} handler={setIsMenuOpen}>
         <MenuHandler>
-          <Typography as="a" href="#" variant="small" className="font-normal">
-            <MenuItem className="hidden items-center gap-2 font-medium text-blue-gray-900 lg:flex lg:rounded-full">
+          <Typography as="a" href="/services" variant="small" className="font-normal">
+            <MenuItem className="hidden items-center gap-2 font-medium text-blue-gray-900 bg-transparent lg:flex lg:rounded-full">
               <Square3Stack3DIcon className="h-[18px] w-[18px] text-blue-gray-500" />
               Services
               <ChevronDownIcon
@@ -180,41 +180,66 @@ function NavListMenu() {
 
 
 // nav list component
-// const navListItems = [
-//   {
-//     label: "Account",
-//     icon: UserCircleIcon,
-//   },
-//   {
-//     label: "Blocks",
-//     icon: CubeTransparentIcon,
-//   },
-//   {
-//     label: "Docs",
-//     icon: CodeBracketSquareIcon,
-//   },
-// ];
+const navListItems = [
+  {
+    label: "About",
+    link: "/about",
+  },
+  {
+    label: "Team",
+    link: "/team",
+  },
+  {
+    label: "Publications",
+    link: "/publications",
+  },
+  {
+    label: "Projects",
+    link: "/projects",
+  },
+  {
+    label: "Services",
+    link: "/services",
+  },
+  {
+    label: "Contact",
+    link: "/contact",
+  },
+];
 
 function NavList() {
+  const location = useLocation();
+  const isStartService = location.pathname.startsWith("/services");
+  const isServiceHome = location.pathname === "/services";
+
   return (
-    // <ul className="mt-2 mb-4 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center">
-    <NavListMenu />
-    // {navListItems.map(({ label, icon }, key) => (
-    //   <Typography
-    //     key={label}
-    //     as="a"
-    //     href="#"
-    //     variant="small"
-    //     color="gray"
-    //     className="font-medium text-blue-gray-500"
-    //   >
-    //     <MenuItem className="flex items-center gap-2 lg:rounded-full">
-    //       {React.createElement(icon, { className: "h-[18px] w-[18px]" })}{" "}
-    //       <span className="text-gray-900"> {label}</span>
-    //     </MenuItem>
-    //   </Typography>
-    // ))}
-    // </ul>
+    <div className="flex w-full items-center justify-between">
+      {/* Centered Navigation Items (including Contact) */}
+      {!isStartService && (
+        <ul className="flex flex-col gap-2 lg:flex-row lg:items-center mx-auto">
+          {navListItems.map(({ label, link }) => (
+            <Typography
+              key={label}
+              as="a"
+              href={link}
+              color="gray"
+              className="font-medium text-blue-gray-500"
+            >
+              <MenuItem className="flex items-center gap-2 bg-transparent lg:rounded-full">
+                <span className="text-gray-900">{label}</span>
+              </MenuItem>
+            </Typography>
+          ))}
+        </ul>
+      )}
+
+      {/* Services Menu on the right */}
+      {!isServiceHome && isStartService && (
+        <div className="ml-auto">
+          <NavListMenu />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -231,7 +256,8 @@ export default function ComplexNavbar() {
   }, []);
 
   const location = useLocation();
-  const isHome = location.pathname === "/";
+  const isServiceHome = location.pathname === "/services" || location.pathname === "/services/";
+  const isStartService = location.pathname.startsWith("/services");
 
   return (
     <Navbar
@@ -244,7 +270,7 @@ export default function ComplexNavbar() {
         {/* Left: Logo */}
         <a href="/" className="ml-2 flex-shrink-0">
           <img
-            src={`${base}/logo-crp.png`}
+            src="/logo-crp.png"
             alt="FONQP Logo"
             className="h-7 w-auto"
           />
@@ -263,13 +289,11 @@ export default function ComplexNavbar() {
           </IconButton>
 
           {/* Desktop NavList (hidden on small) */}
-          {!isHome &&
-            <div className="hidden lg:block">
-              <NavList />
-            </div>
-          }
+          <div className="hidden lg:block">
+            <NavList />
+          </div>
 
-          {isHome && (
+          {isServiceHome && (
             <div className="absolute left-1/2 -translate-x-1/2 hidden sm:block">
               <Typography
                 variant="h4"
@@ -280,13 +304,13 @@ export default function ComplexNavbar() {
             </div>
           )}
 
-          {!isHome && (
+          {!isServiceHome && isStartService && (
             <div className="absolute left-1/2 -translate-x-1/2 hidden sm:block">
               <img
                 src={
                   services.find(
                     (s) =>
-                      s.link.replace(base, "/") === location.pathname
+                      s.link === location.pathname
                   )?.logo
                 }
                 alt="Page Logo"
@@ -296,8 +320,11 @@ export default function ComplexNavbar() {
 
           )}
 
-          <ProfileMenu />
+          {isStartService && (
+            <ProfileMenu />
+          )}
 
+          {/* Profile Menu */}
         </div>
 
       </div>

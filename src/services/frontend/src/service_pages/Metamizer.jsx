@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     Menu,
     MenuHandler,
@@ -29,6 +30,8 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import Skeleton from '../components/skeleton';
 import ExportDialog from '../components/Export';
+import NotLoggedInMessage from '../components/NotLoggedInMessage';
+import { services } from '../data/Services';
 
 function ModelDropdown({ selectedModel, onChange }) {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -119,7 +122,7 @@ function LeftSection() {
     return (
         <div className="flex flex-col h-full w-full">
             {/* Scrollable main content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-orange-200 scrollbar-track-transparent">
                 {/* Model selector */}
                 <div className="flex justify-center">
                     <ModelDropdown
@@ -135,7 +138,7 @@ function LeftSection() {
                         onDrop={handleDrop}
                         onDragOver={(e) => e.preventDefault()}
                         onClick={() => document.getElementById("file-input").click()}
-                        className="absolute inset-0 border-2 border-dashed border-purple-500 rounded-lg flex items-center justify-center text-center cursor-pointer transition hover:bg-purple-50 z-10"
+                        className="absolute inset-0 border-2 border-dashed border-purple-500 rounded-lg flex items-center justify-center text-center cursor-pointer transition hover:backdrop-blur-md z-10 backdrop-blur-sm"
                     >
                         <input
                             id="file-input"
@@ -159,8 +162,8 @@ function LeftSection() {
                     )}
                 </div>
 
-                {/* Upload Button */}
-                <div className="flex justify-center">
+                <div className="flex justify-between">
+                    {/* Upload button aligned left */}
                     <Button
                         disabled={!file || isUploading}
                         onClick={handleFileUpload}
@@ -168,7 +171,17 @@ function LeftSection() {
                     >
                         {isUploading ? "Uploading..." : "Upload File"}
                     </Button>
+
+                    {/* Run button aligned right */}
+                    <Button
+                        disabled={!file || isUploading}
+                        onClick={handleFileUpload}
+                        className="bg-lime-500 text-white px-6 py-2 rounded-md hover:bg-lime-700"
+                    >
+                        {isUploading ? "Running..." : "Run Inference"}
+                    </Button>
                 </div>
+
             </div>
 
             {/* Fixed Chat Input */}
@@ -178,20 +191,24 @@ function LeftSection() {
                     value={text}
                     color="green"
                     onChange={(e) => setText(e.target.value)}
-                    containerProps={{ className: "min-h-[100px]" }}
+                    containerProps={{
+                        className: "min-h-[100px] backdrop-blur-sm",
+                    }}
+                    className="resize-none max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-200 scrollbar-track-transparent"
                 />
 
-                <div className="flex justify-end">
+
+                <div className="flex items-center justify-between">
+                    <span className="text-md text-gray-500">Upstream LLM Model: None</span>
+
                     <Button
                         onClick={handleSend}
-                        className="text-white px-4 py-2 rounded-md transition"
+                        className="text-white px-4 py-2 rounded-md transition bg-purple-50 flex items-center gap-2"
                     >
-                        <PaperAirplaneIcon className="h-5 w-5" />
+                        <PaperAirplaneIcon className="h-5 w-5 text-purple-700" />
                     </Button>
                 </div>
             </div>
-
-
 
         </div>
     );
@@ -201,7 +218,7 @@ function LeftSection() {
 function ModelViewer({ onExport }) {
     return (
         <div className="flex flex-col h-full w-full">
-            <div className="flex-1 min-h-0 w-full rounded-xl overflow-hidden border border-gray-200">
+            <div className="flex-1 min-h-0 w-full rounded-xl overflow-hidden border border-transparent backdrop-blur-sm">
                 <Canvas camera={{ position: [2, 2, 2], fov: 50 }}>
                     <ambientLight intensity={0.5} />
                     <directionalLight position={[5, 3, 4]} intensity={1} />
@@ -264,7 +281,7 @@ function ValidateSection({ onExport }) {
                 </Button>
             </div>
 
-            <div className="w-full max-w-4xl mx-auto aspect-video rounded-lg border border-gray-200 flex items-center justify-center">
+            <div className="w-full max-w-4xl mx-auto aspect-video rounded-lg border border-transparent flex items-center justify-center backdrop-blur-sm">
                 {isLoading ? (
                     <Spinner className="h-16 w-16" color="orange" />
                 ) : imageUrl ? (
@@ -280,7 +297,7 @@ function ValidateSection({ onExport }) {
                 )}
             </div>
 
-            <div className="flex-1 min-h-0 w-full max-w-4xl mx-auto border border-gray-200 rounded-md overflow-y-auto p-4 bg-gray-50">
+            <div className="flex-1 min-h-0 w-full max-w-4xl mx-auto border border-gray-200 rounded-md overflow-y-auto p-4 backdrop-blur-sm">
                 {logs.length > 0 ? (
                     logs.map((line, idx) => (
                         <Typography key={idx} variant="small" className="text-gray-800 whitespace-pre-wrap">
@@ -288,8 +305,8 @@ function ValidateSection({ onExport }) {
                         </Typography>
                     ))
                 ) : (
-                    <Typography variant="small" color="gray">
-                        Simulation logs will appear here
+                    <Typography variant="medium" color="gray">
+                        Simulation Logs
                     </Typography>
                 )}
             </div>
@@ -340,9 +357,15 @@ function LLMChatSection() {
                         {responseText}
                     </Typography>
                 ) : (
-                    <Typography variant="small" color="gray">
-                        LLM output will appear here
-                    </Typography>
+                    <>
+
+                        <Typography variant="small" color="gray" className="text-center mb-8">
+                            LLM output will appear here
+                        </Typography>
+                        <div className="flex justify-center">
+                            <Skeleton />
+                        </div>
+                    </>
                 )}
             </div>
         </div>
@@ -404,19 +427,39 @@ function RightSection() {
 }
 
 export default function Metamizer() {
+    const isLoggedIn = localStorage.getItem("authToken") !== null;
+
+    const location = useLocation();
+    const bkg = services.find(s => s.link === location.pathname);
+
     return (
         <div className="fixed top-[64px] left-0 right-0 bottom-0 overflow-hidden">
-            <div className="flex w-full h-full">
+            <div
+                className="absolute inset-0 bg-no-repeat bg-cover z-0"
+                style={{
+                    backgroundImage: `url(${bkg?.bkg})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                }}
+            />
+
+            {/* Main Content */}
+            <div className="relative z-10 flex w-full h-full">
+                {!isLoggedIn && <NotLoggedInMessage />}
+
                 {/* Left Section - 60% */}
-                <div className="w-[60%] h-full overflow-y-auto bg-white p-6">
+                <div className="w-[60%] h-full overflow-y-auto bg-white bg-opacity-90 p-6">
                     <LeftSection />
                 </div>
 
                 {/* Right Section - 40% */}
-                <div className="w-[40%] h-full overflow-y-auto p-6">
+                <div className="w-[40%] h-full overflow-y-auto bg-white bg-opacity-90 p-6">
                     <RightSection />
                 </div>
+
             </div>
         </div>
     );
 }
+

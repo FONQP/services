@@ -1,23 +1,30 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+
 import { default as Navbar } from "./components/Navbar";
-import Metamizer from "./pages/Metamizer";
-import Footer from "./components/Footer";
-import Rng from "./pages/Rng";
+
+import Main from "./pages/Main";
+import Team from "./pages/Team";
+import Contact from "./pages/Contact";
+
+import Home from "./service_pages/Home";
+import Metamizer from "./service_pages/Metamizer";
+import Rng from "./service_pages/Rng";
 
 function App() {
   return (
-    <Router basename="/services">
+    <Router>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="pt-[64px]">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/metamizer" element={<Metamizer />} />
-            <Route path="/rng" element={<Rng />} />
+            <Route path="/" element={<Main />} />
+            <Route path="/about" element={<Main />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/publications" element={<Main />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/services" element={<Home />} />
+            <Route path="/services/metamizer" element={<Metamizer />} />
+            <Route path="/services/rng" element={<Rng />} />
           </Routes>
-        </div>
-        {/* <Footer /> */}
       </div>
     </Router>
   );
